@@ -4,164 +4,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>LENDAS 3D — Survival</title>
+<title>LENDAS 3D | Survival</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;overflow:hidden;background:#10251d;color:white;font-family:Arial,sans-serif}
+body{margin:0;overflow:hidden;background:#14251c;color:white;font-family:Arial,sans-serif}
 canvas{display:block}
 #hud{position:fixed;inset:0;pointer-events:none}
-#title{position:absolute;top:12px;left:12px;color:#efbd55;font-size:24px;font-weight:900;text-shadow:0 2px 5px #000}
-#stats{position:absolute;top:52px;left:12px;background:#07120dcc;padding:10px;border-radius:10px;font-size:13px}
-#message{position:absolute;top:12px;right:12px;background:#07120dcc;padding:10px;border-radius:10px;font-size:12px}
-#joystick{position:absolute;left:20px;bottom:22px;width:125px;height:125px;border:2px solid #ffffff77;background:#ffffff18;border-radius:50%;pointer-events:auto;touch-action:none}
-#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#ffffff66;border:2px solid white}
-#buttons{position:absolute;right:15px;bottom:25px;display:flex;flex-direction:column;gap:10px;pointer-events:auto}
-button{border:1px solid #ffffff88;border-radius:50%;width:65px;height:65px;background:#13251edb;color:white;font-weight:bold;touch-action:manipulation}
-#help{position:absolute;left:50%;top:18%;transform:translateX(-50%);background:#07120dcc;border-radius:8px;padding:8px;text-align:center;font-size:12px;white-space:nowrap}
+.panel{background:#08130edb;border:1px solid #d4d9c44c;border-radius:12px;padding:10px;backdrop-filter:blur(8px)}
+#logo{position:absolute;top:12px;left:12px;font-size:25px;font-weight:900;color:#f2c66d;text-shadow:0 3px 8px #000}
+#stats{position:absolute;top:54px;left:12px;font-size:13px;line-height:1.8}
+#objective{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:12px;text-align:center;white-space:nowrap}
+#notice{position:absolute;top:95px;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap}
+#joy{position:absolute;bottom:22px;left:18px;width:125px;height:125px;border:2px solid #ffffff70;border-radius:50%;background:#ffffff16;pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border:2px solid #fff9;border-radius:50%;background:#ffffff50}
+#actions{position:absolute;bottom:25px;right:15px;display:flex;flex-direction:column;gap:10px;pointer-events:auto}
+button{width:66px;height:58px;border-radius:15px;border:1px solid #ffffff80;background:#13251edb;color:white;font-weight:bold;font-size:11px;touch-action:manipulation}
+#bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap}
+#crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;color:#fff9}
+#login{position:fixed;inset:0;z-index:5;background:#07120dee;display:flex;align-items:center;justify-content:center;padding:20px}
+#loginbox{width:min(390px,100%);padding:24px;border:1px solid #c3a45d;border-radius:18px;background:#101c18;text-align:center}
+#login h1{color:#f2c66d;letter-spacing:3px}
+#login p{color:#c4d0c9;font-size:13px}
+input{width:100%;padding:13px;margin:6px 0;background:#08130e;color:white;border:1px solid #52675a;border-radius:8px;font-size:16px}
+#start{width:100%;height:46px;background:#e9bd62;color:#182019;border:0;font-size:14px}
+@media(max-width:600px){#objective{top:12px;left:auto;right:12px;transform:none}#notice{top:145px}#bar{bottom:160px}#stats{top:52px}}
 </style>
 </head>
 <body>
 <div id="hud">
-  <div id="title">LENDAS 3D</div>
-  <div id="stats">❤️ Vida: <span id="hp">100</span><br>🍖 Fome: <span id="food">100</span><br>🪵 Madeira: <span id="wood">0</span><br>🪨 Pedra: <span id="stone">0</span><br>🏠 Bases: <span id="bases">0</span></div>
-  <div id="message">SOBREVIVA • EXPLORE • CONSTRUA</div>
-  <div id="help">PC: WASD / setas<br>Celular: use o joystick</div>
-  <div id="joystick"><div id="knob"></div></div>
-  <div id="buttons"><button id="collect">COLETAR</button><button id="build">CONSTRUIR</button></div>
+ <div id="logo">LENDAS 3D</div>
+ <div id="stats" class="panel">
+  👤 <span id="playerName">Sobrevivente</span><br>
+  ❤️ Vida: <span id="hp">100</span>/100<br>
+  🍖 Fome: <span id="food">100</span>/100<br>
+  🪵 Madeira: <span id="wood">0</span><br>
+  🪨 Pedra: <span id="stone">0</span><br>
+  🏠 Bases: <span id="bases">0</span>
+ </div>
+ <div id="objective" class="panel">MISSÃO<br>Reúna recursos e sobreviva</div>
+ <div id="notice" class="panel">Explore a ilha para encontrar recursos</div>
+ <div id="crosshair">+</div>
+ <div id="joy"><div id="knob"></div></div>
+ <div id="actions">
+  <button id="collect">🪓<br>COLETAR (E)</button>
+  <button id="build">🏠<br>CONSTRUIR (B)</button>
+  <button id="eat">🍎<br>COMER</button>
+ </div>
+ <div id="bar" class="panel">LENDAS • Sobrevivência • Inventário: madeira, pedra e bases</div>
 </div>
+
+<div id="login">
+ <div id="loginbox">
+  <h1>LENDAS 3D</h1>
+  <p>EXPLORE • SOBREVIVA • CONSTRUA SUA LENDA</p>
+  <input id="nick" maxlength="18" placeholder="Nome do sobrevivente">
+  <button id="start">ENTRAR NO MUNDO</button>
+  <p>Protótipo local. O progresso fica salvo neste aparelho.</p>
+ </div>
+</div>
+
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
+const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x91cbd6);
-scene.fog=new THREE.Fog(0x91cbd6,35,100);
+scene.background=new THREE.Color(0x9bcbd7);
+scene.fog=new THREE.Fog(0x9bcbd7,35,125);
 
-const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,200);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.body.prepend(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xd8f4ff,0x41533b,2));
-const sun=new THREE.DirectionalLight(0xffe4ad,3);
-sun.position.set(-20,35,15);
+scene.add(new THREE.HemisphereLight(0xd9f4ff,0x384b32,2.2));
+const sun=new THREE.DirectionalLight(0xffe2ae,3.0);
+sun.position.set(-25,40,18);
 sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
 scene.add(sun);
 
 const ground=new THREE.Mesh(
- new THREE.PlaneGeometry(220,220,30,30),
- new THREE.MeshStandardMaterial({color:0x507c45,roughness:1})
+ new THREE.PlaneGeometry(240,240,50,50),
+ new THREE.MeshStandardMaterial({color:0x426b3d,roughness:1})
 );
 ground.rotation.x=-Math.PI/2;
 ground.receiveShadow=true;
 scene.add(ground);
 
 const sea=new THREE.Mesh(
- new THREE.PlaneGeometry(500,500),
- new THREE.MeshStandardMaterial({color:0x237c9b,roughness:.35})
+ new THREE.PlaneGeometry(600,600),
+ new THREE.MeshStandardMaterial({color:0x287e9c,roughness:.25,metalness:.1})
 );
 sea.rotation.x=-Math.PI/2;
-sea.position.y=-.4;
+sea.position.y=-.5;
 scene.add(sea);
 
-const trees=[],rocks=[];
-for(let i=0;i<70;i++){
- const x=(Math.random()-.5)*90,z=(Math.random()-.5)*90;
- if(Math.hypot(x,z)<7)continue;
- const trunk=new THREE.Mesh(
-  new THREE.CylinderGeometry(.25,.4,2.5,7),
-  new THREE.MeshStandardMaterial({color:0x69452a})
+const sand=new THREE.Mesh(
+ new THREE.CircleGeometry(53,90),
+ new THREE.MeshStandardMaterial({color:0xc5b17b,roughness:1})
+);
+sand.rotation.x=-Math.PI/2;
+sand.position.y=-.17;
+scene.add(sand);
+
+// Montanhas distantes
+const mountainMat=new THREE.MeshStandardMaterial({color:0x516f6c,roughness:1});
+for(let i=0;i<20;i++){
+ const a=i/20*Math.PI*2;
+ const r=78+Math.random()*15;
+ const m=new THREE.Mesh(
+  new THREE.ConeGeometry(8+Math.random()*9,18+Math.random()*15,7),
+  mountainMat
  );
- trunk.position.set(x,1.25,z);
- trunk.castShadow=true;
- scene.add(trunk);
- const leaves=new THREE.Mesh(
-  new THREE.ConeGeometry(1.8,4,7),
-  new THREE.MeshStandardMaterial({color:0x28613b})
- );
- leaves.position.set(x,3.8,z);
- leaves.castShadow=true;
- scene.add(leaves);
- trees.push({x,z,mesh:trunk});
+ m.position.set(Math.cos(a)*r,7,Math.sin(a)*r);
+ scene.add(m);
 }
-for(let i=0;i<45;i++){
- const x=(Math.random()-.5)*85,z=(Math.random()-.5)*85;
+
+// Árvores
+const trees=[];
+for(let i=0;i<100;i++){
+ const x=(Math.random()-.5)*100;
+ const z=(Math.random()-.5)*100;
+ if(Math.hypot(x,z)<7)continue;
+
+ const tree=new THREE.Group();
+ const trunk=new THREE.Mesh(
+  new THREE.CylinderGeometry(.25,.42,3,8),
+  new THREE.MeshStandardMaterial({color:0x62412a,roughness:1})
+ );
+ trunk.position.y=1.4;
+ trunk.castShadow=true;
+ tree.add(trunk);
+
+ for(let j=0;j<3;j++){
+  const leaves=new THREE.Mesh(
+   new THREE.ConeGeometry(1.8-j*.3,3.3,8),
+   new THREE.MeshStandardMaterial({
+    color:[0x285a37,0x326b3c,0x3d7843][j],
+    roughness:1
+   })
+  );
+  leaves.position.y=3.2+j*.8;
+  leaves.castShadow=true;
+  tree.add(leaves);
+ }
+ tree.position.set(x,0,z);
+ scene.add(tree);
+ trees.push({x,z,tree,alive:true});
+}
+
+// Pedras
+const rocks=[];
+for(let i=0;i<65;i++){
+ const x=(Math.random()-.5)*90,z=(Math.random()-.5)*90;
  if(Math.hypot(x,z)<5)continue;
  const mesh=new THREE.Mesh(
-  new THREE.DodecahedronGeometry(.5+Math.random()*.4),
-  new THREE.MeshStandardMaterial({color:0x858b89})
+  new THREE.DodecahedronGeometry(.45+Math.random()*.5,1),
+  new THREE.MeshStandardMaterial({color:0x818986,roughness:1})
  );
  mesh.position.set(x,.3,z);
+ mesh.rotation.set(Math.random(),Math.random(),Math.random());
  mesh.castShadow=true;
  scene.add(mesh);
- rocks.push({x,z,mesh});
+ rocks.push({x,z,mesh,alive:true});
 }
 
+// Personagem: a câmera fica na altura dos olhos
 const player=new THREE.Group();
 scene.add(player);
+player.position.set(0,0,0);
+
 const body=new THREE.Mesh(
- new THREE.CapsuleGeometry(.4,.85,4,8),
- new THREE.MeshStandardMaterial({color:0x354c48})
+ new THREE.CapsuleGeometry(.38,.9,4,8),
+ new THREE.MeshStandardMaterial({color:0x384b43})
 );
 body.position.y=1.2;
-body.castShadow=true;
 player.add(body);
-const head=new THREE.Mesh(
- new THREE.SphereGeometry(.3,12,10),
- new THREE.MeshStandardMaterial({color:0xd5a27b})
+player.visible=false;
+
+// Mãos e ferramenta simples em primeira pessoa
+const handMat=new THREE.MeshStandardMaterial({color:0xb77d59,roughness:.85});
+const sleeveMat=new THREE.MeshStandardMaterial({color:0x34443a,roughness:1});
+const hands=new THREE.Group();
+camera.add(hands);
+scene.add(camera);
+
+function makeArm(x,y,z,rot){
+ const arm=new THREE.Mesh(new THREE.BoxGeometry(.18,.55,.2),sleeveMat);
+ arm.position.set(x,y,z);
+ arm.rotation.z=rot;
+ hands.add(arm);
+ const hand=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),handMat);
+ hand.position.set(x,y+.27,z-.03);
+ hands.add(hand);
+}
+makeArm(-.52,-.65,-1,-.35);
+makeArm(.5,-.55,-.85,.4);
+
+// Machado preso à mão direita
+const handle=new THREE.Mesh(
+ new THREE.CylinderGeometry(.035,.045,.85,8),
+ new THREE.MeshStandardMaterial({color:0x76502f,roughness:1})
 );
-head.position.y=2;
-player.add(head);
-const backpack=new THREE.Mesh(
- new THREE.BoxGeometry(.5,.65,.25),
- new THREE.MeshStandardMaterial({color:0x906035})
+handle.position.set(.48,-.38,-.9);
+handle.rotation.x=-.3;
+hands.add(handle);
+const blade=new THREE.Mesh(
+ new THREE.BoxGeometry(.36,.25,.06),
+ new THREE.MeshStandardMaterial({color:0x9ca8aa,metalness:.65,roughness:.3})
 );
-backpack.position.set(0,1.3,-.4);
-player.add(backpack);
+blade.position.set(.62,.02,-.92);
+blade.rotation.z=-.25;
+hands.add(blade);
 
 const state={hp:100,food:100,wood:0,stone:0,bases:0};
-const keys={};
-let joyX=0,joyY=0,joyActive=false,last=performance.now();
-const $=id=>document.getElementById(id);
-
 function updateHUD(){
- for(const k of ['hp','food','wood','stone','bases'])
-  $(k).textContent=Math.floor(state[k]);
+ for(const k of ['hp','food','wood','stone','bases'])$(k).textContent=Math.floor(state[k]);
 }
-function notify(text){
- $('message').textContent=text;
+let noticeTimer;
+function notify(s){
+ $('notice').textContent=s;
+ clearTimeout(noticeTimer);
+ noticeTimer=setTimeout(()=>$('notice').textContent='Explore a ilha para encontrar recursos',2400);
 }
-function collect(){
- let best=null,dist=1e9,type='';
- for(const t of trees){
-  const d=Math.hypot(t.x-player.position.x,t.z-player.position.z);
-  if(d<dist){dist=d;best=t;type='wood'}
- }
- for(const r of rocks){
-  const d=Math.hypot(r.x-player.position.x,r.z-player.position.z);
-  if(d<dist){dist=d;best=r;type='stone'}
- }
- if(dist>4.5){notify('Chegue perto de uma árvore ou pedra!');return}
- if(type==='wood'){state.wood+=3;best.mesh.material.color.set(0x403023);notify('+3 MADEIRA')}
- else{state.stone+=2;best.mesh.material.color.set(0x4b5150);notify('+2 PEDRAS')}
+function save(){
+ try{
+  localStorage.setItem('lendas-save',JSON.stringify({
+   ...state,name:$('playerName').textContent,
+   x:player.position.x,z:player.position.z
+  }));
+ }catch{}
+}
+function load(){
+ try{
+  const s=JSON.parse(localStorage.getItem('lendas-save')||'null');
+  if(s){
+   for(const k of ['hp','food','wood','stone','bases'])if(s[k]!==undefined)state[k]=s[k];
+   if(s.x!==undefined)player.position.x=s.x;
+   if(s.z!==undefined)player.position.z=s.z;
+   if(s.name)$('playerName').textContent=s.name;
+  }
+ }catch{}
  updateHUD();
 }
+function nearestResource(){
+ let best=null,dist=Infinity,type='';
+ for(const t of trees)if(t.alive){
+  const d=Math.hypot(t.x-player.position.x,t.z-player.position.z);
+  if(d<dist){best=t;dist=d;type='wood'}
+ }
+ for(const r of rocks)if(r.alive){
+  const d=Math.hypot(r.x-player.position.x,r.z-player.position.z);
+  if(d<dist){best=r;dist=d;type='stone'}
+ }
+ return {best,dist,type};
+}
+function collect(){
+ const {best,dist,type}=nearestResource();
+ if(!best||dist>4.5){notify('Chegue mais perto de uma árvore ou pedra!');return}
+ if(type==='wood'){
+  state.wood+=3;best.alive=false;best.tree.visible=false;
+  notify('+3 MADEIRA');
+ }else{
+  state.stone+=2;best.alive=false;best.mesh.visible=false;
+  notify('+2 PEDRAS');
+ }
+ updateHUD();save();
+}
 function build(){
- if(state.wood<5){notify('Precisa de 5 madeiras!');return}
+ if(state.wood<5){notify('Você precisa de 5 madeiras!');return}
  state.wood-=5;state.bases++;
  const base=new THREE.Mesh(
-  new THREE.BoxGeometry(3,.25,3),
-  new THREE.MeshStandardMaterial({color:0x9c7848})
+  new THREE.BoxGeometry(3,.22,3),
+  new THREE.MeshStandardMaterial({color:0x98744a,roughness:1})
  );
- base.position.set(player.position.x,.18,player.position.z-3);
- base.castShadow=true;
- scene.add(base);
- updateHUD();notify('BASE CONSTRUÍDA!');
+ base.position.set(player.position.x,.12,player.position.z-3);
+ base.castShadow=true;scene.add(base);
+ updateHUD();save();notify('Base construída!');
 }
 $('collect').onclick=collect;
 $('build').onclick=build;
+$('eat').onclick=()=>{
+ if(state.food>=100){notify('Você não está com fome!');return}
+ state.food=Math.min(100,state.food+25);
+ updateHUD();save();notify('+25 de fome');
+};
 
+$('start').onclick=()=>{
+ const name=$('nick').value.trim()||'Sobrevivente';
+ $('playerName').textContent=name.slice(0,18);
+ load();
+ $('login').style.display='none';
+ save();
+};
+load();
+
+const keys={};
 addEventListener('keydown',e=>{
  keys[e.key.toLowerCase()]=true;
  if(e.key.toLowerCase()==='e')collect();
@@ -169,12 +311,14 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 
-const joy=$('joystick'),knob=$('knob');
+// Joystick móvel
+const joy=$('joy'),knob=$('knob');
+let joyX=0,joyY=0,joyActive=false;
 function moveJoy(e){
  const r=joy.getBoundingClientRect();
  let x=e.clientX-(r.left+r.width/2);
  let y=e.clientY-(r.top+r.height/2);
- const max=38,d=Math.hypot(x,y);
+ const max=37,d=Math.hypot(x,y);
  if(d>max){x=x/d*max;y=y/d*max}
  joyX=x/max;joyY=y/max;
  knob.style.transform=`translate(${x}px,${y}px)`;
@@ -183,10 +327,26 @@ joy.addEventListener('pointerdown',e=>{
  joyActive=true;joy.setPointerCapture(e.pointerId);moveJoy(e);
 });
 joy.addEventListener('pointermove',e=>{if(joyActive)moveJoy(e)});
-function stopJoy(){joyActive=false;joyX=joyY=0;knob.style.transform='translate(0,0)'}
+function stopJoy(){
+ joyActive=false;joyX=joyY=0;knob.style.transform='translate(0,0)';
+}
 joy.addEventListener('pointerup',stopJoy);
 joy.addEventListener('pointercancel',stopJoy);
 
+// Arrastar no lado direito para olhar ao redor
+let looking=false,lastLookX=0,lookYaw=0,lookPitch=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.clientX>innerWidth*.4){looking=true;lastLookX=e.clientX}
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(!looking)return;
+ const dx=e.clientX-lastLookX;lastLookX=e.clientX;
+ lookYaw-=dx*.004;
+});
+renderer.domElement.addEventListener('pointerup',()=>looking=false);
+renderer.domElement.addEventListener('pointercancel',()=>looking=false);
+
+let last=performance.now(),saveTime=0;
 function animate(now){
  requestAnimationFrame(animate);
  const dt=Math.min((now-last)/1000,.05);last=now;
@@ -199,31 +359,30 @@ function animate(now){
  const len=Math.hypot(x,z);
  if(len>1){x/=len;z/=len}
  if(len>.04){
-  player.position.x+=x*6*dt;
-  player.position.z+=z*6*dt;
-  player.rotation.y=Math.atan2(x,z);
+  const speed=5.5;
+  const sin=Math.sin(lookYaw),cos=Math.cos(lookYaw);
+  player.position.x+=(x*cos+z*sin)*speed*dt;
+  player.position.z+=(z*cos-x*sin)*speed*dt;
  }
- state.food=Math.max(0,state.food-dt*.04);
- if(state.food===0)state.hp=Math.max(0,state.hp-dt*.1);
+ // primeira pessoa com olhar livre
+ camera.position.set(player.position.x,1.72,player.position.z);
+ camera.rotation.order='YXZ';
+ camera.rotation.y=lookYaw;
+ camera.rotation.x=lookPitch;
+ state.food=Math.max(0,state.food-dt*.025);
+ if(state.food<=0)state.hp=Math.max(0,state.hp-dt*.15);
  updateHUD();
- const offset=new THREE.Vector3(0,4,7).applyAxisAngle(
-  new THREE.Vector3(0,1,0),player.rotation.y
- );
- camera.position.lerp(new THREE.Vector3(
-  player.position.x+offset.x,
-  player.position.y+offset.y,
-  player.position.z+offset.z
- ),.12);
- camera.lookAt(player.position.x,1,player.position.z);
+ saveTime+=dt;
+ if(saveTime>15){saveTime=0;save()}
  renderer.render(scene,camera);
 }
 requestAnimationFrame(animate);
+
 addEventListener('resize',()=>{
  camera.aspect=innerWidth/innerHeight;
  camera.updateProjectionMatrix();
  renderer.setSize(innerWidth,innerHeight);
 });
-updateHUD();
 </script>
 </body>
 </html>
