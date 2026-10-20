@@ -1,2 +1,229 @@
-# lendas
-LENDAS 3D — Survival Adventure
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>LENDAS 3D — Survival</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#10251d;color:white;font-family:Arial,sans-serif}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+#title{position:absolute;top:12px;left:12px;color:#efbd55;font-size:24px;font-weight:900;text-shadow:0 2px 5px #000}
+#stats{position:absolute;top:52px;left:12px;background:#07120dcc;padding:10px;border-radius:10px;font-size:13px}
+#message{position:absolute;top:12px;right:12px;background:#07120dcc;padding:10px;border-radius:10px;font-size:12px}
+#joystick{position:absolute;left:20px;bottom:22px;width:125px;height:125px;border:2px solid #ffffff77;background:#ffffff18;border-radius:50%;pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#ffffff66;border:2px solid white}
+#buttons{position:absolute;right:15px;bottom:25px;display:flex;flex-direction:column;gap:10px;pointer-events:auto}
+button{border:1px solid #ffffff88;border-radius:50%;width:65px;height:65px;background:#13251edb;color:white;font-weight:bold;touch-action:manipulation}
+#help{position:absolute;left:50%;top:18%;transform:translateX(-50%);background:#07120dcc;border-radius:8px;padding:8px;text-align:center;font-size:12px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div id="title">LENDAS 3D</div>
+  <div id="stats">❤️ Vida: <span id="hp">100</span><br>🍖 Fome: <span id="food">100</span><br>🪵 Madeira: <span id="wood">0</span><br>🪨 Pedra: <span id="stone">0</span><br>🏠 Bases: <span id="bases">0</span></div>
+  <div id="message">SOBREVIVA • EXPLORE • CONSTRUA</div>
+  <div id="help">PC: WASD / setas<br>Celular: use o joystick</div>
+  <div id="joystick"><div id="knob"></div></div>
+  <div id="buttons"><button id="collect">COLETAR</button><button id="build">CONSTRUIR</button></div>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x91cbd6);
+scene.fog=new THREE.Fog(0x91cbd6,35,100);
+
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,200);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.shadowMap.enabled=true;
+document.body.prepend(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xd8f4ff,0x41533b,2));
+const sun=new THREE.DirectionalLight(0xffe4ad,3);
+sun.position.set(-20,35,15);
+sun.castShadow=true;
+scene.add(sun);
+
+const ground=new THREE.Mesh(
+ new THREE.PlaneGeometry(220,220,30,30),
+ new THREE.MeshStandardMaterial({color:0x507c45,roughness:1})
+);
+ground.rotation.x=-Math.PI/2;
+ground.receiveShadow=true;
+scene.add(ground);
+
+const sea=new THREE.Mesh(
+ new THREE.PlaneGeometry(500,500),
+ new THREE.MeshStandardMaterial({color:0x237c9b,roughness:.35})
+);
+sea.rotation.x=-Math.PI/2;
+sea.position.y=-.4;
+scene.add(sea);
+
+const trees=[],rocks=[];
+for(let i=0;i<70;i++){
+ const x=(Math.random()-.5)*90,z=(Math.random()-.5)*90;
+ if(Math.hypot(x,z)<7)continue;
+ const trunk=new THREE.Mesh(
+  new THREE.CylinderGeometry(.25,.4,2.5,7),
+  new THREE.MeshStandardMaterial({color:0x69452a})
+ );
+ trunk.position.set(x,1.25,z);
+ trunk.castShadow=true;
+ scene.add(trunk);
+ const leaves=new THREE.Mesh(
+  new THREE.ConeGeometry(1.8,4,7),
+  new THREE.MeshStandardMaterial({color:0x28613b})
+ );
+ leaves.position.set(x,3.8,z);
+ leaves.castShadow=true;
+ scene.add(leaves);
+ trees.push({x,z,mesh:trunk});
+}
+for(let i=0;i<45;i++){
+ const x=(Math.random()-.5)*85,z=(Math.random()-.5)*85;
+ if(Math.hypot(x,z)<5)continue;
+ const mesh=new THREE.Mesh(
+  new THREE.DodecahedronGeometry(.5+Math.random()*.4),
+  new THREE.MeshStandardMaterial({color:0x858b89})
+ );
+ mesh.position.set(x,.3,z);
+ mesh.castShadow=true;
+ scene.add(mesh);
+ rocks.push({x,z,mesh});
+}
+
+const player=new THREE.Group();
+scene.add(player);
+const body=new THREE.Mesh(
+ new THREE.CapsuleGeometry(.4,.85,4,8),
+ new THREE.MeshStandardMaterial({color:0x354c48})
+);
+body.position.y=1.2;
+body.castShadow=true;
+player.add(body);
+const head=new THREE.Mesh(
+ new THREE.SphereGeometry(.3,12,10),
+ new THREE.MeshStandardMaterial({color:0xd5a27b})
+);
+head.position.y=2;
+player.add(head);
+const backpack=new THREE.Mesh(
+ new THREE.BoxGeometry(.5,.65,.25),
+ new THREE.MeshStandardMaterial({color:0x906035})
+);
+backpack.position.set(0,1.3,-.4);
+player.add(backpack);
+
+const state={hp:100,food:100,wood:0,stone:0,bases:0};
+const keys={};
+let joyX=0,joyY=0,joyActive=false,last=performance.now();
+const $=id=>document.getElementById(id);
+
+function updateHUD(){
+ for(const k of ['hp','food','wood','stone','bases'])
+  $(k).textContent=Math.floor(state[k]);
+}
+function notify(text){
+ $('message').textContent=text;
+}
+function collect(){
+ let best=null,dist=1e9,type='';
+ for(const t of trees){
+  const d=Math.hypot(t.x-player.position.x,t.z-player.position.z);
+  if(d<dist){dist=d;best=t;type='wood'}
+ }
+ for(const r of rocks){
+  const d=Math.hypot(r.x-player.position.x,r.z-player.position.z);
+  if(d<dist){dist=d;best=r;type='stone'}
+ }
+ if(dist>4.5){notify('Chegue perto de uma árvore ou pedra!');return}
+ if(type==='wood'){state.wood+=3;best.mesh.material.color.set(0x403023);notify('+3 MADEIRA')}
+ else{state.stone+=2;best.mesh.material.color.set(0x4b5150);notify('+2 PEDRAS')}
+ updateHUD();
+}
+function build(){
+ if(state.wood<5){notify('Precisa de 5 madeiras!');return}
+ state.wood-=5;state.bases++;
+ const base=new THREE.Mesh(
+  new THREE.BoxGeometry(3,.25,3),
+  new THREE.MeshStandardMaterial({color:0x9c7848})
+ );
+ base.position.set(player.position.x,.18,player.position.z-3);
+ base.castShadow=true;
+ scene.add(base);
+ updateHUD();notify('BASE CONSTRUÍDA!');
+}
+$('collect').onclick=collect;
+$('build').onclick=build;
+
+addEventListener('keydown',e=>{
+ keys[e.key.toLowerCase()]=true;
+ if(e.key.toLowerCase()==='e')collect();
+ if(e.key.toLowerCase()==='b')build();
+});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+
+const joy=$('joystick'),knob=$('knob');
+function moveJoy(e){
+ const r=joy.getBoundingClientRect();
+ let x=e.clientX-(r.left+r.width/2);
+ let y=e.clientY-(r.top+r.height/2);
+ const max=38,d=Math.hypot(x,y);
+ if(d>max){x=x/d*max;y=y/d*max}
+ joyX=x/max;joyY=y/max;
+ knob.style.transform=`translate(${x}px,${y}px)`;
+}
+joy.addEventListener('pointerdown',e=>{
+ joyActive=true;joy.setPointerCapture(e.pointerId);moveJoy(e);
+});
+joy.addEventListener('pointermove',e=>{if(joyActive)moveJoy(e)});
+function stopJoy(){joyActive=false;joyX=joyY=0;knob.style.transform='translate(0,0)'}
+joy.addEventListener('pointerup',stopJoy);
+joy.addEventListener('pointercancel',stopJoy);
+
+function animate(now){
+ requestAnimationFrame(animate);
+ const dt=Math.min((now-last)/1000,.05);last=now;
+ let x=0,z=0;
+ if(keys.w||keys.arrowup)z--;
+ if(keys.s||keys.arrowdown)z++;
+ if(keys.a||keys.arrowleft)x--;
+ if(keys.d||keys.arrowright)x++;
+ x+=joyX;z+=joyY;
+ const len=Math.hypot(x,z);
+ if(len>1){x/=len;z/=len}
+ if(len>.04){
+  player.position.x+=x*6*dt;
+  player.position.z+=z*6*dt;
+  player.rotation.y=Math.atan2(x,z);
+ }
+ state.food=Math.max(0,state.food-dt*.04);
+ if(state.food===0)state.hp=Math.max(0,state.hp-dt*.1);
+ updateHUD();
+ const offset=new THREE.Vector3(0,4,7).applyAxisAngle(
+  new THREE.Vector3(0,1,0),player.rotation.y
+ );
+ camera.position.lerp(new THREE.Vector3(
+  player.position.x+offset.x,
+  player.position.y+offset.y,
+  player.position.z+offset.z
+ ),.12);
+ camera.lookAt(player.position.x,1,player.position.z);
+ renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
+addEventListener('resize',()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+updateHUD();
+</script>
+</body>
+</html>
